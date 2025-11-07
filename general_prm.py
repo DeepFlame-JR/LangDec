@@ -50,7 +50,7 @@ class GeneralPRM(BasePRM):
             cache_dir=os.getenv('CACHE_DIR'),
             attn_implementation=os.getenv('ATTN_IMPLEMENTATION', "flash_attention_2"),
             token=os.getenv('HF_TOKEN'),
-            local_files_only=True,
+            # local_files_only=True,
             use_cache=True)
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
