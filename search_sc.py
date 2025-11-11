@@ -118,7 +118,7 @@ class SelfConsistencySearch:
             complete_beams['step_scores'].append(proposal_scores.tolist())
             complete_beams['temp'].append(self.generator.temperature)
 
-        trials = 0
+        self.trials = 0
         last_proposal_ids = proposal_ids.clone()
         best_score = proposal_agg_scores
         logger.info(f'[SelfConsistency] Intial {self.trials}/{self.max_trials} : {best_score:.4f}')
