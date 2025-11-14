@@ -6,6 +6,7 @@ export ATTN_IMPLEMENTATION='sdpa' # 'flash_attention_2'
 MAX_NEW_TOKENS=1000
 
 MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct"
+ASSISTANT_MODEL_NAME=
 
 # PRM config
 PRM_MODEL_NAME="UW-Madison-Lee-Lab/VersaPRM"
@@ -40,6 +41,7 @@ CUDA_VISIBLE_DEVICES=$CUDA_DEVICE_ID python main.py \
     --hf_token $HF_TOKEN \
     --max_new_tokens $MAX_NEW_TOKENS \
     --model_name $MODEL_NAME \
+    --assistant_model_name $ASSISTANT_MODEL_NAME \
     --batch_size $BATCH_SIZE \
     --secondary_device $SECONDARY_DEVICE \
     --max_trials $MAX_TRIALS\
