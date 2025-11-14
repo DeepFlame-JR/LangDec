@@ -37,6 +37,7 @@ parser.add_argument('--dataset', type=str)
 parser.add_argument("--max_new_tokens", type=int, default=1000, help="Maximum number of new tokens to generate.")
 parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-1B-Instruct", help="Name of the model to use.")
 parser.add_argument("--use_past_key_values", type=bool, default=False, help="Whether to use past key values for faster inference.")
+parser.add_argument("--assistant_model_name", type=str, default=None, help="Name of the assistant model for speculative decoding.")
 parser.add_argument("--batch_size", type=int, default=1, help="Batch size for processing.")
 parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device to run the model (e.g., cuda, cpu).")
 parser.add_argument("--secondary_device", type=str, default="cpu", help="Secondary device to offload computation (e.g., cpu).")
@@ -233,6 +234,7 @@ if __name__ == '__main__':
         generator = LlamaGenerator(
             max_new_tokens=args.max_new_tokens,
             model_name=args.model_name,
+            assistant_model_name=args.assistant_model_name,
             quantization_config=bnb_config,
             hf_token=args.hf_token,
             use_past_key_values=args.use_past_key_values,

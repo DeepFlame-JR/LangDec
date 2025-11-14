@@ -48,6 +48,7 @@ class LlamaGenerator(BaseGenerator):
         self,
         max_new_tokens: int = 1000,
         model_name: str = "meta-llama/Llama-3.2-1B-Instruct",
+        assistant_model_name: Optional[str] = None,
         quantization_config: Optional[BitsAndBytesConfig] = None,
         hf_token: Optional[str] = None,
         use_past_key_values: bool = True,
@@ -61,6 +62,7 @@ class LlamaGenerator(BaseGenerator):
         self.device = device
         self.secondary_device = secondary_device
 
+        # Load main model
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name, 
             torch_dtype=torch.float16, 
@@ -71,8 +73,24 @@ class LlamaGenerator(BaseGenerator):
             token=os.getenv('HF_TOKEN'),
             )
 
+        # Load assistant model for speculative decoding if provided
+        self.assistant_model = None
+        if assistant_model_name:
+            print(f"Loading assistant model for speculative decoding: {assistant_model_name}")
+            self.assistant_model = AutoModelForCausalLM.from_pretrained(
+                assistant_model_name,
+                torch_dtype=torch.float16,
+                trust_remote_code=True,
+                quantization_config=BitsAndBytesConfig(**quantization_config),
+                cache_dir=os.getenv('CACHE_DIR', './'),
+                attn_implementation=os.getenv('ATTN_IMPLEMENTATION', "flash_attention_2"),
+                token=os.getenv('HF_TOKEN'),
+            )
+
         if quantization_config is None:
             self.model = self.model.to(self.device, dtype=dtype)
+            if self.assistant_model:
+                self.assistant_model = self.assistant_model.to(self.device, dtype=dtype)
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
 
@@ -198,6 +216,7 @@ class LlamaGenerator(BaseGenerator):
             outputs = self.model.generate(
                 input_ids=batched_input_ids,
                 attention_mask=attention_mask,
+                assistant_model=self.assistant_model,
                 do_sample=True,
                 max_new_tokens=self.max_new_tokens,
                 max_length=None,
