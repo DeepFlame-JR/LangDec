@@ -75,14 +75,13 @@ class LlamaGenerator(BaseGenerator):
 
         # Load assistant model for speculative decoding if provided
         self.assistant_model = None
-        self.assistant_tokenizer = None
         if assistant_model_name:
             print(f"Loading assistant model for speculative decoding: {assistant_model_name}")
             self.assistant_model = AutoModelForCausalLM.from_pretrained(
                 assistant_model_name,
                 torch_dtype=torch.float16,
                 trust_remote_code=True,
-                quantization_config=BitsAndBytesConfig(**quantization_config),
+                quantization_config=BitsAndBytesConfig(**quantization_config), 
                 cache_dir=os.getenv('CACHE_DIR', './'),
                 attn_implementation=os.getenv('ATTN_IMPLEMENTATION', "flash_attention_2"),
                 token=os.getenv('HF_TOKEN'),
@@ -94,11 +93,6 @@ class LlamaGenerator(BaseGenerator):
                 self.assistant_model = self.assistant_model.to(self.device, dtype=dtype)
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
-        if self.assistant_model:
-            self.assistant_tokenizer = AutoTokenizer.from_pretrained(
-                assistant_model_name,
-                token=hf_token
-            )
 
         self.step_ids = [
             i
@@ -224,8 +218,6 @@ class LlamaGenerator(BaseGenerator):
                 attention_mask=attention_mask,
                 assistant_model=self.assistant_model,
                 # Pass both tokenizers if assistant model is used
-                tokenizer=self.tokenizer if self.assistant_model else None,
-                assistant_tokenizer=self.assistant_tokenizer if self.assistant_model else None,
                 do_sample=True,
                 max_new_tokens=self.max_new_tokens,
                 max_length=None,
