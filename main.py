@@ -1,6 +1,7 @@
 import os
 import json
 import yaml
+import time
 import torch
 import random
 import logging
@@ -291,7 +292,9 @@ if __name__ == '__main__':
             raise KeyError()
 
         try:
+            start_time = time.time()
             outputs = search(formatted_query)
+            outputs['elapsed_time'] = time.time() - start_time
             result = {qid: outputs}
 
             # 개별 저장
