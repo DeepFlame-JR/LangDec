@@ -173,6 +173,8 @@ def evaluate_method_single(llm, prm, core_method, results_dir="experiments-mmlup
     LETTER2IDX = {c:i for i,c in enumerate("ABCDEFGHIJ")}
     IDX2LETTER = {i:c for c,i in LETTER2IDX.items()}
 
+    elapsed_time_sum = 0
+    elapsed_time_cnt = 0
     for example_idx, example in enumerate(dataset):
         qid = str(example_idx)
         domain = None
@@ -189,6 +191,10 @@ def evaluate_method_single(llm, prm, core_method, results_dir="experiments-mmlup
         answer_option = example['answer']
 
         if qid in results:
+            elapsed_time_sum = results[qid].get("elapsed_time", 0)
+            if elapsed_time_sum > 0:
+                elapsed_time_cnt += 1
+            
             if ('SC' in core_method):
                 outputs_key = 'answer'
             else:
@@ -280,7 +286,12 @@ def evaluate_method_single(llm, prm, core_method, results_dir="experiments-mmlup
                 "answer_index": answer_index,
                 "pred": "NOTYET",
                 "correct": False,
-            })            
+            })       
+    if elapsed_time_cnt > 0:
+        elapsed_time_avg = elapsed_time_sum / elapsed_time_cnt
+        print(f"Average elapsed timed {elapsed_time_avg:.2f} sec over {elapsed_time_cnt} cases")
+        
+        
     df = pd.DataFrame(records)
     acc = df["correct"].mean()
     return acc, df
