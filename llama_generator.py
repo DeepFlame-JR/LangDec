@@ -48,13 +48,14 @@ class LlamaGenerator(BaseGenerator):
         self,
         max_new_tokens: int = 1000,
         model_name: str = "meta-llama/Llama-3.2-1B-Instruct",
-        assistant_model_name: Optional[str] = None,
         quantization_config: Optional[BitsAndBytesConfig] = None,
         hf_token: Optional[str] = None,
         use_past_key_values: bool = True,
         batch_size: int = 1,
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         secondary_device: str = "cpu",
+        assistant_model_name: Optional[str] = None,
+        speculation_length: Optional[int] = None,
         dtype: torch.dtype = torch.float32,
     ) -> None:
         self.use_past_key_values = use_past_key_values
@@ -108,6 +109,7 @@ class LlamaGenerator(BaseGenerator):
         self.model.generation_config.eos_token_id = [self.eos_id, self.model.generation_config.eos_token_id]
         self.max_new_tokens = max_new_tokens
         self.temperature = 1.0
+        self.speculation_length = speculation_length
 
     def encode(self, question: str) -> Tensor:
         messages = [
@@ -217,6 +219,7 @@ class LlamaGenerator(BaseGenerator):
                 input_ids=batched_input_ids,
                 attention_mask=attention_mask,
                 assistant_model=self.assistant_model,
+                num_assistant_tokens=self.speculation_length,
                 # Pass both tokenizers if assistant model is used
                 do_sample=True,
                 max_new_tokens=self.max_new_tokens,

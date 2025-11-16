@@ -38,7 +38,6 @@ parser.add_argument('--dataset', type=str)
 parser.add_argument("--max_new_tokens", type=int, default=1000, help="Maximum number of new tokens to generate.")
 parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-1B-Instruct", help="Name of the model to use.")
 parser.add_argument("--use_past_key_values", type=bool, default=False, help="Whether to use past key values for faster inference.")
-parser.add_argument("--assistant_model_name", type=str, default=None, help="Name of the assistant model for speculative decoding.")
 parser.add_argument("--batch_size", type=int, default=1, help="Batch size for processing.")
 parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device to run the model (e.g., cuda, cpu).")
 parser.add_argument("--secondary_device", type=str, default="cpu", help="Secondary device to offload computation (e.g., cpu).")
@@ -60,6 +59,11 @@ parser.add_argument("--prm_model_name", type=str, default="UW-Madison-Lee-Lab/Ve
 parser.add_argument("--positive_tag", type=str, default="+", help="Positive tag used in the model.")
 parser.add_argument("--negative_tag", type=str, default="-", help="Negative tag used in the model.")
 parser.add_argument("--score_token", type=str, default=" \n\n\n\n", help="Token used to calculate or indicate scores.")
+
+# Speculative decoding config
+parser.add_argument("--assistant_model_name", type=str, default=None, help="Name of the assistant model for speculative decoding.")
+parser.add_argument("--speculation_length", type=int, default=None, help="Number of assistant tokens for speculative decoding.")
+
 
 parser.add_argument(
     '--test_sample_idx',
@@ -241,6 +245,7 @@ if __name__ == '__main__':
             use_past_key_values=args.use_past_key_values,
             batch_size=args.batch_size,
             device=args.device,
+            speculation_length=args.speculation_length,
             secondary_device=args.secondary_device,
         )
     else:
