@@ -191,8 +191,9 @@ def evaluate_method_single(llm, prm, core_method, results_dir="experiments-mmlup
         answer_option = example['answer']
 
         if qid in results:
-            elapsed_time_sum = results[qid].get("elapsed_time", 0)
-            if elapsed_time_sum > 0:
+            qid_elapse_time = results[qid].get("elapsed_time", 0)
+            if qid_elapse_time > 0:
+                elapsed_time_sum += qid_elapse_time
                 elapsed_time_cnt += 1
             
             if ('SC' in core_method):
