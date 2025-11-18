@@ -63,6 +63,7 @@ parser.add_argument("--score_token", type=str, default=" \n\n\n\n", help="Token 
 # Speculative decoding config
 parser.add_argument("--assistant_model_name", type=str, default=None, help="Name of the assistant model for speculative decoding.")
 parser.add_argument("--num_assistant_tokens", type=int, default=None, help="Number of assistant tokens for speculative decoding.")
+parser.add_argument("--assistant_confidence_threshold", type=float, default=None, help="Confidence threshold for assistant model in speculative decoding.")
 
 
 parser.add_argument(
@@ -246,6 +247,7 @@ if __name__ == '__main__':
             batch_size=args.batch_size,
             device=args.device,
             num_assistant_tokens=args.num_assistant_tokens,
+            assistant_confidence_threshold=args.assistant_confidence_threshold,
             secondary_device=args.secondary_device,
         )
     else:

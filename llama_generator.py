@@ -56,6 +56,7 @@ class LlamaGenerator(BaseGenerator):
         secondary_device: str = "cpu",
         assistant_model_name: Optional[str] = None,
         num_assistant_tokens: Optional[int] = None,
+        assistant_confidence_threshold: Optional[float] = None,
         dtype: torch.dtype = torch.float32,
     ) -> None:
         self.use_past_key_values = use_past_key_values
@@ -81,9 +82,11 @@ class LlamaGenerator(BaseGenerator):
         self.assistant_model = None
         self.assistant_tokenizer = None
         self.num_assistant_tokens = num_assistant_tokens
+        self.assistant_confidence_threshold = assistant_confidence_threshold
         if assistant_model_name:
             print(f"[Speculative Decoding] Loading assistant model for speculative decoding: {assistant_model_name}")
-            print(f"[Speculative Decoding] Using speculation length: {self.num_assistant_tokens}")
+            print(f"[Speculative Decoding] Using num assistant tokens: {self.num_assistant_tokens}")
+            print(f"[Speculative Decoding] Using assistant confidence threshold: {self.assistant_confidence_threshold}")
 
             # Load assistant tokenizer first to compare
             assistant_tokenizer_candidate = AutoTokenizer.from_pretrained(assistant_model_name, token=hf_token)
@@ -235,6 +238,7 @@ class LlamaGenerator(BaseGenerator):
                 tokenizer=self.tokenizer,
                 assistant_tokenizer=self.assistant_tokenizer,
                 num_assistant_tokens=self.num_assistant_tokens,
+                assistant_confidence_threshold=self.assistant_confidence_threshold,
                 # Pass both tokenizers if assistant model is used
                 do_sample=True,
                 max_new_tokens=self.max_new_tokens,
