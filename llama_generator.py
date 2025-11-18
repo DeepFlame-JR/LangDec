@@ -101,7 +101,6 @@ class LlamaGenerator(BaseGenerator):
                 assistant_model_name,
                 torch_dtype=torch.float16,
                 trust_remote_code=True,
-                quantization_config=BitsAndBytesConfig(**quantization_config), 
                 cache_dir=os.getenv('CACHE_DIR', './'),
                 attn_implementation=os.getenv('ATTN_IMPLEMENTATION', "flash_attention_2"),
                 token=os.getenv('HF_TOKEN'),
@@ -109,8 +108,6 @@ class LlamaGenerator(BaseGenerator):
         
         if quantization_config is None:
             self.model = self.model.to(self.device, dtype=dtype)
-            if self.assistant_model:
-                self.assistant_model = self.assistant_model.to(self.device, dtype=dtype)
 
         self.step_ids = [
             i
