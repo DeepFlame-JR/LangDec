@@ -55,7 +55,7 @@ class LlamaGenerator(BaseGenerator):
         device: str = "cuda" if torch.cuda.is_available() else "cpu",
         secondary_device: str = "cpu",
         assistant_model_name: Optional[str] = None,
-        speculation_length: Optional[int] = None,
+        num_assistant_tokens: Optional[int] = None,
         dtype: torch.dtype = torch.float32,
     ) -> None:
         self.use_past_key_values = use_past_key_values
@@ -74,10 +74,29 @@ class LlamaGenerator(BaseGenerator):
             token=os.getenv('HF_TOKEN'),
             )
 
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
+
         # Load assistant model for speculative decoding if provided
+        # https://huggingface.co/docs/transformers/v4.57.1/en/main_classes/text_generation#transformers.GenerationConfig
         self.assistant_model = None
+        self.assistant_tokenizer = None
+        self.num_assistant_tokens = num_assistant_tokens
         if assistant_model_name:
-            print(f"Loading assistant model for speculative decoding: {assistant_model_name}")
+            print(f"[Speculative Decoding] Loading assistant model for speculative decoding: {assistant_model_name}")
+            print(f"[Speculative Decoding] Using speculation length: {self.num_assistant_tokens}")
+
+            # Load assistant tokenizer first to compare
+            assistant_tokenizer_candidate = AutoTokenizer.from_pretrained(assistant_model_name, token=hf_token)
+
+            # If vocab is identical, do not pass the assistant_tokenizer to generate()
+            # This prevents errors when different model cards use the same tokenizer
+            if self.tokenizer.get_vocab() == assistant_tokenizer_candidate.get_vocab():
+                print("[Speculative Decoding] Assistant model uses the same tokenizer. Reusing main tokenizer.")
+                self.assistant_tokenizer = None
+            else:
+                print("[Speculative Decoding] Loading dedicated tokenizer for the assistant model.")
+                self.assistant_tokenizer = assistant_tokenizer_candidate
+
             self.assistant_model = AutoModelForCausalLM.from_pretrained(
                 assistant_model_name,
                 torch_dtype=torch.float16,
@@ -87,13 +106,11 @@ class LlamaGenerator(BaseGenerator):
                 attn_implementation=os.getenv('ATTN_IMPLEMENTATION', "flash_attention_2"),
                 token=os.getenv('HF_TOKEN'),
             )
-
+        
         if quantization_config is None:
             self.model = self.model.to(self.device, dtype=dtype)
             if self.assistant_model:
                 self.assistant_model = self.assistant_model.to(self.device, dtype=dtype)
-
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
 
         self.step_ids = [
             i
@@ -109,7 +126,6 @@ class LlamaGenerator(BaseGenerator):
         self.model.generation_config.eos_token_id = [self.eos_id, self.model.generation_config.eos_token_id]
         self.max_new_tokens = max_new_tokens
         self.temperature = 1.0
-        self.speculation_length = speculation_length
 
     def encode(self, question: str) -> Tensor:
         messages = [
@@ -219,7 +235,8 @@ class LlamaGenerator(BaseGenerator):
                 input_ids=batched_input_ids,
                 attention_mask=attention_mask,
                 assistant_model=self.assistant_model,
-                num_assistant_tokens=self.speculation_length,
+                assistant_tokenizer=self.assistant_tokenizer,
+                num_assistant_tokens=self.num_assistant_tokens,
                 # Pass both tokenizers if assistant model is used
                 do_sample=True,
                 max_new_tokens=self.max_new_tokens,

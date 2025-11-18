@@ -62,7 +62,7 @@ parser.add_argument("--score_token", type=str, default=" \n\n\n\n", help="Token 
 
 # Speculative decoding config
 parser.add_argument("--assistant_model_name", type=str, default=None, help="Name of the assistant model for speculative decoding.")
-parser.add_argument("--speculation_length", type=int, default=None, help="Number of assistant tokens for speculative decoding.")
+parser.add_argument("--num_assistant_tokens", type=int, default=None, help="Number of assistant tokens for speculative decoding.")
 
 
 parser.add_argument(
@@ -245,7 +245,7 @@ if __name__ == '__main__':
             use_past_key_values=args.use_past_key_values,
             batch_size=args.batch_size,
             device=args.device,
-            speculation_length=args.speculation_length,
+            num_assistant_tokens=args.num_assistant_tokens,
             secondary_device=args.secondary_device,
         )
     else:
