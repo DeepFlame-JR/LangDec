@@ -235,6 +235,7 @@ class LlamaGenerator(BaseGenerator):
                 input_ids=batched_input_ids,
                 attention_mask=attention_mask,
                 assistant_model=self.assistant_model,
+                tokenizer=self.tokenizer,
                 assistant_tokenizer=self.assistant_tokenizer,
                 num_assistant_tokens=self.num_assistant_tokens,
                 # Pass both tokenizers if assistant model is used
